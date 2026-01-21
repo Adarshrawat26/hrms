@@ -1,33 +1,224 @@
 'use client';
 
 import { employeeApi } from '@/lib/api-client';
-import { useAuthStore } from '@/stores/authStore';
-import { Employee } from '@/types';
-import { canAccess } from '@/utils/helpers';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+interface Employee {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  position: string;
+  salary: number;
+  phone?: string;
+  status: string;
+}
+
 export default function EmployeesPage() {
-  const { user } = useAuthStore();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    department: '',
+    position: '',
+    salary: '',
+    phone: '',
+    joinDate: new Date().toISOString().split('T')[0],
+  });
 
   useEffect(() => {
-    if (!canAccess(user?.role || '', ['ADMIN', 'MANAGER'])) {
-      return;
-    }
     loadEmployees();
-  }, [page]);
+  }, []);
 
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      const response = await employeeApi.getAll(page, 10);
-      setEmployees(response.data);
-      setTotal(response.pagination.total);
+      const data = await employeeApi.getAll();
+      setEmployees(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error('Error loading employees:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await employeeApi.create({
+        ...formData,
+        salary: parseFloat(formData.salary),
+        userId: '1', // Default user ID
+      });
+      setFormData({
+        firstName: '',
+        lastName: '',
+        department: '',
+        position: '',
+        salary: '',
+        phone: '',
+        joinDate: new Date().toISOString().split('T')[0],
+      });
+      setShowForm(false);
+      loadEmployees();
+    } catch (error) {
+      console.error('Error creating employee:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this employee?')) {
+      try {
+        await employeeApi.delete(id);
+        loadEmployees();
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Employees</h1>
+            <p className="text-gray-600">Manage your employee database</p>
+          </div>
+          <div className="flex gap-4">
+            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+              ← Back
+            </Link>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+            >
+              {showForm ? 'Cancel' : '+ Add Employee'}
+            </button>
+          </div>
+        </div>
+
+        {/* Add Employee Form */}
+        {showForm && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Add New Employee</h2>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                required
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                required
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="text"
+                placeholder="Department"
+                value={formData.department}
+                onChange={(e) => setFormData({...formData, department: e.target.value})}
+                required
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="text"
+                placeholder="Position"
+                value={formData.position}
+                onChange={(e) => setFormData({...formData, position: e.target.value})}
+                required
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="number"
+                placeholder="Salary"
+                value={formData.salary}
+                onChange={(e) => setFormData({...formData, salary: e.target.value})}
+                required
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="tel"
+                placeholder="Phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+                >
+                  Add Employee
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Employees List */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          {loading ? (
+            <p className="text-gray-600 text-center py-8">Loading employees...</p>
+          ) : employees.length === 0 ? (
+            <p className="text-gray-600 text-center py-8">No employees found. Click "Add Employee" to create one.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-gray-700">Name</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Department</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Position</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Salary</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.map((emp) => (
+                    <tr key={emp._id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-800">{emp.firstName} {emp.lastName}</td>
+                      <td className="px-4 py-3 text-gray-600">{emp.department}</td>
+                      <td className="px-4 py-3 text-gray-600">{emp.position}</td>
+                      <td className="px-4 py-3 text-gray-600">₹{emp.salary.toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          emp.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {emp.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleDelete(emp._id)}
+                          className="text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
       console.error('Error loading employees:', error);
     } finally {
       setLoading(false);

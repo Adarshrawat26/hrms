@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuthModule } from './auth/auth.module';
 import { AppConfigService } from './config/config.service';
@@ -18,6 +19,7 @@ import { PrismaModule } from './prisma/prisma.module';
     EmployeeModule,
     AttendanceModule,
   ],
+  controllers: [AppController],
   providers: [AppConfigService],
 })
 export class AppModule {}

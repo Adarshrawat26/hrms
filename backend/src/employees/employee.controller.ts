@@ -1,8 +1,8 @@
-import { Roles } from '@/common/decorators/roles.decorator';
-import { AllExceptionsFilter } from '@/common/filters/http-exception.filter';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Roles } from '../common/decorators/roles.decorator';
+import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto/employee.dto';
 import { EmployeeService } from './employee.service';
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuthStore } from '@/stores/authStore';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -10,34 +9,12 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen }: SidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuthStore();
 
-  const adminMenuItems = [
+  const menuItems = [
     { label: 'Dashboard', href: '/dashboard', icon: '📊' },
     { label: 'Employees', href: '/employees', icon: '👥' },
     { label: 'Attendance', href: '/attendance', icon: '⏱️' },
-    { label: 'Reports', href: '/reports', icon: '📈' },
   ];
-
-  const managerMenuItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { label: 'Team Attendance', href: '/attendance', icon: '⏱️' },
-    { label: 'Reports', href: '/reports', icon: '📈' },
-  ];
-
-  const employeeMenuItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { label: 'My Attendance', href: '/my-attendance', icon: '⏱️' },
-  ];
-
-  let menuItems = [];
-  if (user?.role === 'ADMIN') {
-    menuItems = adminMenuItems;
-  } else if (user?.role === 'MANAGER') {
-    menuItems = managerMenuItems;
-  } else {
-    menuItems = employeeMenuItems;
-  }
 
   const isActive = (href: string) => pathname === href;
 

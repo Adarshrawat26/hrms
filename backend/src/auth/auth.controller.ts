@@ -1,5 +1,5 @@
-import { AllExceptionsFilter } from '@/common/filters/http-exception.filter';
 import { Body, Controller, Post, UseFilters } from '@nestjs/common';
+import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 

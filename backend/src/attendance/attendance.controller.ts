@@ -1,8 +1,3 @@
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { AllExceptionsFilter } from '@/common/filters/http-exception.filter';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 import {
     Controller,
     Get,
@@ -12,6 +7,11 @@ import {
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { AttendanceService } from './attendance.service';
 
 @Controller('attendance')
