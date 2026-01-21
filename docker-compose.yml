@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hrms-postgres
+    environment:
+      POSTGRES_USER: hrms_user
+      POSTGRES_PASSWORD: hrms_password
+      POSTGRES_DB: hrms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hrms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrms_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hrms-backend
+    environment:
+      DATABASE_URL: postgresql://hrms_user:hrms_password@postgres:5432/hrms_db
+      JWT_SECRET: your-super-secret-key-change-in-production
+      JWT_EXPIRES_IN: 24h
+      PORT: 3000
+      NODE_ENV: development
+      CORS_ORIGIN: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hrms-network
+    volumes:
+      - ./backend/src:/app/src
+
+  # Frontend Next.js App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hrms-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - hrms-network
+    volumes:
+      - ./frontend/app:/app/app
+      - ./frontend/src:/app/src
+
+volumes:
+  postgres_data:
+
+networks:
+  hrms-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  phone           String
+  designation     String
+  department      String
+  password        String
+  role            String        @default("EMPLOYEE")
+  status          String        @default("ACTIVE")
+  dateOfJoining   DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  attendances     Attendance[]
+
+  @@map("employees")
+}
+
+model Attendance {
+  id              String        @id @default(cuid())
+  employeeId      String
+  checkInTime     DateTime?
+  checkOutTime    DateTime?
+  workHours       Float?
+  date            DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  employee        Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@map("attendance")
+}
